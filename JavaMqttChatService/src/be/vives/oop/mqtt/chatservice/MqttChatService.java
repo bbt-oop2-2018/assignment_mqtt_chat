@@ -19,11 +19,11 @@ public class MqttChatService implements MqttCallback {
     private MemoryPersistence persistence;
     private MqttConnectOptions connectionOptions;
     private IMqttMessageHandler messageHandler = null;
-    
+
     private final String BASE_TOPIC = "java/mqttchat";
     private String channelName;
     private String channelTopic;
-    
+
     public MqttChatService(String clientId, String channelName) {
         Random random = new Random();
         this.clientId = clientId + random.nextInt();
@@ -31,11 +31,11 @@ public class MqttChatService implements MqttCallback {
         this.channelTopic = BASE_TOPIC + "/" + this.channelName;
         setupMqtt();
     }
-    
+
     public MqttChatService() {
         this("guest", "general");
     }
-    
+
     private void setupMqtt() {
         try {
             persistence = new MemoryPersistence();
@@ -55,7 +55,18 @@ public class MqttChatService implements MqttCallback {
             me.printStackTrace();
         }
     }
-    
+
+    public void switchChannel(String channel) {
+        try {
+            client.unsubscribe(channelTopic);
+            this.channelName = channel;
+            this.channelTopic = BASE_TOPIC + "/" + this.channelName;
+            client.subscribe(channelTopic);
+        } catch (MqttException ex) {
+            Logger.getLogger(MqttChatService.class.getName()).log(Level.SEVERE, null, ex);
+        }
+    }
+
     public void sendMessage(String message) {
         try {
             MqttMessage mqttMessage = new MqttMessage(message.getBytes());
@@ -65,11 +76,11 @@ public class MqttChatService implements MqttCallback {
             Logger.getLogger(MqttChatService.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
-    
+
     public void setMessageHandler(IMqttMessageHandler handler) {
         this.messageHandler = handler;
     }
-    
+
     public void disconnect() {
         try {
             client.disconnect();
